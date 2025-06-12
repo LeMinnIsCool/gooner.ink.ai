@@ -217,39 +217,35 @@
     height: 70vh;
     background-color: var(--bg-darker);
     border-radius: var(--border-radius);
-    overflow: hidden;
+    /* Remove overflow: hidden; so the border can show outside */
+    /* overflow: hidden; */
     box-shadow: var(--box-shadow);
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
     z-index: 1;
-    padding: 2px; /* Optional: creates inner spacing so border is visible */
+    padding: 2px; /* Optional inner spacing */
     background-clip: padding-box;
 }
 
 .chat-container::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 4px; /* Border thickness */
+    top: -4px;    /* Move outwards by border thickness */
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
     background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
-    border-radius: inherit;
-    z-index: -1;
-    mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
-    mask-composite: exclude; /* For Firefox */
-    -webkit-mask-composite: destination-out; /* For Chrome */
-    background-clip: border-box;
+    border-radius: calc(var(--border-radius) + 4px); /* increase radius accordingly */
+    z-index: 2;   /* Above container to go over everything */
+    pointer-events: none; /* Let clicks pass through */
 }
 
-        .chat-container.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+/* Visible state */
+.chat-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
 
         .chat-header {
             display: flex;
