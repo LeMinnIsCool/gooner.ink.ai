@@ -210,8 +210,7 @@
             text-decoration: underline;
         }
 
-        /* Chat Container Styles */
-      .chat-container {
+       .chat-container {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -224,28 +223,29 @@
     transform: translateY(20px);
     transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
     z-index: 1;
+    padding: 1px; /* Optional: creates inner spacing so border is visible */
+    background-clip: padding-box;
 }
 
 .chat-container::before {
     content: "";
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-        45deg,
-        red,
-        orange,
-        yellow,
-        green,
-        blue,
-        indigo,
-        violet
-    );
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 2px; /* Border thickness */
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
     border-radius: inherit;
     z-index: -1;
+    mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude; /* For Firefox */
+    -webkit-mask-composite: destination-out; /* For Chrome */
+    background-clip: border-box;
 }
+
 
 
 
