@@ -18,9 +18,7 @@
             --border-radius: 12px;
             --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-             header {
-  border: 3px solid;
-  border-image: linear-gradient(to right, violet, indigo, blue, green, yellow, orange, red) 1;
+             header 
 }
         }
 
@@ -74,9 +72,6 @@
   margin: 0 auto;
   width: 100%;
   position: relative;
-  border: 5px solid;
-  border-image: linear-gradient(to right, violet, indigo, green, yellow, orange, red);
-  border-image-slice: 1;
 }
 
         /* Auth Container Styles */
@@ -216,19 +211,30 @@
         }
 
         /* Chat Container Styles */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 70vh;
-            background-color: var(--bg-darker);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-        }
+      .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+    background-color: var(--bg-darker);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    border: 4px solid transparent; /* Increase border width */
+    border-image: linear-gradient(
+        45deg,
+        red,
+        orange,
+        yellow,
+        green,
+        blue,
+        indigo,
+        violet
+    ) 1;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+}
+
 
         .chat-container.visible {
             opacity: 1;
