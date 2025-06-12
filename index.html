@@ -157,16 +157,6 @@
             box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
         }
 
-        /* Make dropdown text black */
-        select.form-control {
-            color: #000;
-            background-color: #fff;
-        }
-
-        select.form-control option {
-            color: #000;
-        }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -218,7 +208,7 @@
             text-decoration: underline;
         }
 
-        /* Chat Container Styles with Rainbow Border */
+        /* Chat Container Styles */
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -227,55 +217,15 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
-            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-            border: 2px solid transparent;
         }
 
         .chat-container.visible {
             opacity: 1;
             transform: translateY(0);
-        }
-
-        /* Rainbow border animation */
-        .chat-container::after {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border-radius: calc(var(--border-radius) + 3px);
-            background: linear-gradient(
-                45deg,
-                #ff0000,
-                #ff7300,
-                #fffb00,
-                #48ff00,
-                #00ffd5,
-                #002bff,
-                #7a00ff,
-                #ff00c8,
-                #ff0000
-            );
-            background-size: 400% 400%;
-            z-index: -1;
-            animation: rainbowBorder 8s linear infinite;
-            filter: blur(2px);
-        }
-
-        @keyframes rainbowBorder {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
         }
 
         .chat-header {
@@ -749,18 +699,6 @@
             }
         }
 
-        @keyframes rainbowBorder {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .auth-card {
@@ -816,12 +754,12 @@
                 
                 <div class="form-group">
                     <label for="login-email">Email</label>
-                    <input type="email" id="login-email" class="form-control" placeholder="Enter your email" required>
+                    <input type="email" id="login-email" class="form-control" placeholder="Enter your email">
                 </div>
                 
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password">
                 </div>
                 
                 <button class="btn btn-primary" id="login-btn">Sign In</button>
@@ -838,17 +776,17 @@
                 
                 <div class="form-group">
                     <label for="signup-email">Email</label>
-                    <input type="email" id="signup-email" class="form-control" placeholder="Enter your email" required>
+                    <input type="email" id="signup-email" class="form-control" placeholder="Enter your email">
                 </div>
                 
                 <div class="form-group">
                     <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" class="form-control" placeholder="Create a password" required>
+                    <input type="password" id="signup-password" class="form-control" placeholder="Create a password">
                 </div>
                 
                 <div class="form-group">
                     <label for="signup-confirm">Confirm Password</label>
-                    <input type="password" id="signup-confirm" class="form-control" placeholder="Confirm your password" required>
+                    <input type="password" id="signup-confirm" class="form-control" placeholder="Confirm your password">
                 </div>
                 
                 <button class="btn btn-primary" id="signup-btn">Sign Up</button>
@@ -1158,12 +1096,6 @@
                     return;
                 }
                 
-                // Validate email format
-                if (!validateEmail(email)) {
-                    alert('Please enter a valid email address');
-                    return;
-                }
-                
                 // In a real app, this would be a server request
                 if (usersDB[email] && usersDB[email].password === password) {
                     currentUser = { email };
@@ -1187,12 +1119,6 @@
                 
                 if (!email || !password || !confirm) {
                     alert('Please fill in all fields');
-                    return;
-                }
-                
-                // Validate email format
-                if (!validateEmail(email)) {
-                    alert('Please enter a valid email address');
                     return;
                 }
                 
@@ -1226,11 +1152,6 @@
                     applySettings();
                     alert('Account created successfully!');
                 }
-            }
-            
-            function validateEmail(email) {
-                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return re.test(email);
             }
             
             function handleLogout() {
