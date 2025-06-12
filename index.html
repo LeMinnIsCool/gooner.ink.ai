@@ -210,7 +210,7 @@
             text-decoration: underline;
         }
 
-    .chat-container {
+   .chat-container {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -222,21 +222,23 @@
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-    z-index: 1;
+    z-index: 0;
 }
 
-/* Rainbow border */
+/* Rainbow border only (thin outline, not filling the container) */
 .chat-container::before {
     content: "";
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
     padding: 2px; /* Thickness of the border */
-    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
     border-radius: inherit;
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
     z-index: -1;
+
+    /* This cuts out the inner part of the box, leaving just the border */
     -webkit-mask: 
         linear-gradient(#fff 0 0) content-box, 
         linear-gradient(#fff 0 0);
@@ -245,7 +247,10 @@
     mask: 
         linear-gradient(#fff 0 0) content-box, 
         linear-gradient(#fff 0 0);
+    background-clip: border-box;
+    box-sizing: border-box;
 }
+
 
 
         .chat-container.visible {
