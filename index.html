@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gooner AI - Your Arsenal FC Assistant</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #chatbox { height: 400px; border: 1px solid #ccc; padding: 10px; overflow-y: scroll; }
+        .message { margin: 5px 0; padding: 8px; border-radius: 5px; }
+        .user { background: #DB0007; color: white; text-align: right; }
+        .bot { background: #f1f1f1; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Gooner AI ⚽</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Ask me anything about Arsenal..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput').value;
+            document.getElementById('userInput').value = '';
+            
+            // Display user message
+            const chatbox = document.getElementById('chatbox');
+            chatbox.innerHTML += `<div class="message user">${userInput}</div>`;
+            
+            // Get AI response (you'll need to replace with actual API call)
+            const response = await fetchAIMessage(userInput);
+            
+            // Display AI response
+            chatbox.innerHTML += `<div class="message bot">${response}</div>`;
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+        
+        // This is a placeholder - you'll need to connect to a real AI API
+        async function fetchAIMessage(query) {
+            // In a real implementation, you would call your AI backend here
+            return "Thanks for your question about Arsenal! [Real implementation would connect to an AI API]";
+        }
+    </script>
+</body>
+</html>
