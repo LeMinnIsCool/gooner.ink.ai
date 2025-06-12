@@ -210,7 +210,7 @@
             text-decoration: underline;
         }
 
-   .chat-container {
+.chat-container {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -222,10 +222,11 @@
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-    z-index: 0;
+    z-index: 1;
+    padding: 2px; /* Optional: creates inner spacing so border is visible */
+    background-clip: padding-box;
 }
 
-/* Rainbow border only (thin outline, not filling the container) */
 .chat-container::before {
     content: "";
     position: absolute;
@@ -233,25 +234,17 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 2px; /* Thickness of the border */
-    border-radius: inherit;
+    padding: 4px; /* Border thickness */
     background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+    border-radius: inherit;
     z-index: -1;
-
-    /* This cuts out the inner part of the box, leaving just the border */
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
     mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude; /* For Firefox */
+    -webkit-mask-composite: destination-out; /* For Chrome */
     background-clip: border-box;
-    box-sizing: border-box;
 }
-
-
 
         .chat-container.visible {
             opacity: 1;
