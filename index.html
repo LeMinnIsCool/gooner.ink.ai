@@ -278,6 +278,16 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
+        .personality-badge {
+    background: rgba(110, 72, 170, 0.2);
+    color: #6E48AA;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.25rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
 
         .chat-actions {
             display: flex;
@@ -867,20 +877,21 @@
         
         <!-- Chat Container -->
         <div class="chat-container" id="chat-container">
-            <div class="chat-header">
-                <div class="chat-title">
-                    <i class="fas fa-robot"></i> Gooner AI
-                    <span class="model-badge" id="current-model">G1+</span>
-                </div>
-                <div class="chat-actions">
-                    <button class="action-btn" id="settings-btn" title="Settings">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <button class="action-btn" id="logout-btn" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </div>
-            </div>
+           <div class="chat-header">
+    <div class="chat-title">
+        <i class="fas fa-robot"></i> Gooner AI
+        <span class="model-badge" id="current-model">G1+</span>
+        <span class="personality-badge" id="current-personality">Sarcastic</span>
+    </div>
+    <div class="chat-actions">
+        <button class="action-btn" id="settings-btn" title="Settings">
+            <i class="fas fa-cog"></i>
+        </button>
+        <button class="action-btn" id="logout-btn" title="Logout">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+    </div>
+</div>
             
             <div class="chat-messages" id="chat-messages">
                 <div class="message ai-message" style="animation-delay: 0.2s;">
@@ -1064,18 +1075,18 @@
             function initApp() {
                 // Check if user is logged in (from localStorage)
                 const savedUser = localStorage.getItem('goonerAIUser');
-                if (savedUser) {
-                    try {
-                        currentUser = JSON.parse(savedUser);
-                        userSettings = JSON.parse(localStorage.getItem('goonerAISettings')) || userSettings;
-                        showChat();
-                        applySettings();
-                    } catch (e) {
-                        console.error('Error loading user data:', e);
-                        localStorage.removeItem('goonerAIUser');
-                        localStorage.removeItem('goonerAISettings');
-                    }
-                }
+               if (savedUser) {
+    try {
+        currentUser = JSON.parse(savedUser);
+        userSettings = JSON.parse(localStorage.getItem('goonerAISettings')) || userSettings;
+        showChat();
+        applySettings(); // This will initialize both model and personality indicators
+    } catch (e) {
+        console.error('Error loading user data:', e);
+        localStorage.removeItem('goonerAIUser');
+        localStorage.removeItem('goonerAISettings');
+    }
+}
                 
                 // Initialize event listeners
                 setupEventListeners();
@@ -1528,6 +1539,12 @@
                 
                 // Update UI
                 currentModel.textContent = userSettings.model;
+
+                // Update personality display
+document.getElementById('current-personality').textContent = 
+    document.getElementById('ai-personality').value.charAt(0).toUpperCase() + 
+    document.getElementById('ai-personality').value.slice(1);
+                
                 applySettings();
                 
                 // Reset conversation with new settings
@@ -1551,6 +1568,10 @@
                 
                 // Update current model display
                 currentModel.textContent = userSettings.model;
+
+                document.getElementById('current-personality').textContent = 
+    userSettings.personality.charAt(0).toUpperCase() + 
+    userSettings.personality.slice(1);
             }
             
             function hexToRgb(hex) {
