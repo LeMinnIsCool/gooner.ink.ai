@@ -1443,57 +1443,62 @@
             }
             
             // Get AI response
-            async function getAIResponse(userMessage) {
-                typingIndicator.style.display = 'flex';
-                sendButton.disabled = true;
-                scrollToBottom();
-                
-                try {
-                    // IMPORTANT: In production, use a backend to protect your API key
-                    const GROQ_API_KEY = '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';
-                    
-                    // For G1 model, use a simpler system prompt without customization
-                    const systemPrompt = userSettings.model === 'G1' 
-                        ? "You are Gooner AI, a helpful gaming assistant. Provide accurate information about games, strategies, and technical support."
-                        : getSystemPrompt();
-                    
-                    // Update system message in conversation history
-                    if (conversationHistory[0]?.role === "system") {
-                        conversationHistory[0].content = systemPrompt;
-                    } else {
-                        conversationHistory.unshift({role: "system", content: systemPrompt});
-                    }
-                    
-                    // Use different models based on selection
-                    const model = userSettings.model === 'G1 Bolt' 
-                        ? "mixtral-8x7b-32768"  // Faster model for Bolt
-                        : "llama3-70b-8192";    // Default model
-                    
-                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${GROQ_API_KEY}`
-                        },
-                        body: JSON.stringify({
-                            model: model,
-                            messages: conversationHistory,
-                            temperature: 0.7
-                        })
-                    });
-                    
-                    if (!response.ok) throw new Error("API error");
-                    
-                    const data = await response.json();
-                    return data.choices[0]?.message?.content || "I couldn't generate a response.";
-                } catch (error) {
-                    console.error("Error:", error);
-                    return ` OH NO! Error: ${error.message}`;
-                } finally {
-                    typingIndicator.style.display = 'none';
-                    sendButton.disabled = false;
-                }
-            }
+           async function getAIResponse(userMessage) {
+    typingIndicator.style.display = 'flex';
+    sendButton.disabled = true;
+    scrollToBottom();
+    
+    try {
+        // IMPORTANT: In production, use a backend to protect your API key
+        const GROQ_API_KEY = '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';
+        
+        // For G1 model, use a simpler system prompt without customization
+        const systemPrompt = userSettings.model === 'G1' 
+            ? "You are Gooner AI, a helpful gaming assistant. Provide accurate information about games, strategies, and technical support."
+            : getSystemPrompt();
+        
+        // Update system message in conversation history
+        if (conversationHistory[0]?.role === "system") {
+            conversationHistory[0].content = systemPrompt;
+        } else {
+            conversationHistory.unshift({role: "system", content: systemPrompt});
+        }
+        
+        // Use different models based on selection
+        const model = userSettings.model === 'G1 Bolt' 
+            ? "mixtral-8x7b-32768"  // Fast model
+            : "llama3-70b-8192";    // Default model
+        
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: conversationHistory,
+                temperature: 0.7,
+                max_tokens: 4096  // Added max_tokens parameter
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("API Error Details:", errorData);
+            throw new Error(errorData.error?.message || "API error");
+        }
+        
+        const data = await response.json();
+        return data.choices[0]?.message?.content || "I couldn't generate a response.";
+    } catch (error) {
+        console.error("Error:", error);
+        return `Sorry, I encountered an error: ${error.message}. Please try again later.`;
+    } finally {
+        typingIndicator.style.display = 'none';
+        sendButton.disabled = false;
+    }
+}
             
             // Send message
             async function sendMessage() {
