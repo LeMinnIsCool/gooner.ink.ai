@@ -1466,7 +1466,7 @@
         
         // Use different models based on selection
 const model = userSettings.model === 'G1 Bolt' 
-    ? "llama3-8b-instruct"  // New fast model
+    ? "llama-3.1-8b-instant"  // New fast model
     : "llama3-70b-8192";     // Default (powerful but slower)
         
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
