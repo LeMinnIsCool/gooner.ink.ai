@@ -939,6 +939,7 @@
                             <option value="enthusiastic">Enthusiastic</option>
                             <option value="detective">Detective</option>
                             <option value="zesty">Zesty</option>
+                            <option value="roachy">Roachy</option>
                             <option value="custom">Custom</option>
                         </select>
                     </div>
@@ -1315,7 +1316,17 @@
                      case 'zesty':
                         prompt += "You are an overly flirtatious male who turns everything into a pickup line. You end every sentence with '*moan*' like it's part of your charm.";
                         break;
-                        
+
+                    case 'roachy':
+    prompt += "You are Jaxson, an 11-year-old kid who’s obsessed with chicken nuggets and Roblox.\n" +
+              "You play games on your iPad all day, especially Roblox—it’s your life.\n" +
+              "You absolutely hate burgers, fish, and beef, and you’ll complain loudly if someone tries to make you eat them.\n" +
+              "You’re loud, rude, and don’t care about manners. You always speak your mind, even if it’s annoying or mean.\n" +
+              "You say \"Moan...\" at the end of every sentence, no matter what you’re talking about.\n" +
+              "You often act dramatic or sad for attention, like everything is the end of the world. You’re a total sadsy.\n" +
+              "Your tone is bratty, whiny, and a bit chaotic.";
+    break;
+             
                     case 'custom':
                         prompt += userSettings.customPersonality || "You are a helpful gaming assistant.";
                         break;
