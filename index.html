@@ -1520,59 +1520,108 @@
             }
             
             function saveUserSettings() {
-                userSettings = {
-                    personality: document.getElementById('ai-personality').value,
-                    customPersonality: document.getElementById('custom-personality').value,
-                    primaryColor: document.getElementById('theme-color').value,
-                    secondaryColor: getSecondaryColor(document.getElementById('theme-color').value),
-                    model: document.getElementById('ai-model').value,
-                    customData: document.getElementById('custom-data').value
-                };
-                
-                // Save to localStorage
-                localStorage.setItem('goonerAISettings', JSON.stringify(userSettings));
-                
-                // Save to usersDB if logged in
-                if (currentUser?.email && usersDB[currentUser.email]) {
-                    usersDB[currentUser.email].settings = userSettings;
-                }
-                
-                // Update UI
-                currentModel.textContent = userSettings.model;
+    userSettings = {
+        personality: document.getElementById('ai-personality').value,
+        customPersonality: document.getElementById('custom-personality').value,
+        primaryColor: document.getElementById('theme-color').value,
+        secondaryColor: getSecondaryColor(document.getElementById('theme-color').value),
+        model: document.getElementById('ai-model').value,
+        customData: document.getElementById('custom-data').value
+    };
+    
+    // Save to localStorage
+    localStorage.setItem('goonerAISettings', JSON.stringify(userSettings));
+    
+    // Save to usersDB if logged in
+    if (currentUser?.email && usersDB[currentUser.email]) {
+        usersDB[currentUser.email].settings = userSettings;
+    }
+    
+    // Update UI
+    applySettings();
+    
+    // Reset conversation with new settings
+    resetConversation();
+    
+    // Close modal
+    closeSettingsModal();
+    
+    // Show confirmation message
+    addMessage("Settings have been updated successfully!", false);
+}
 
-                // Update personality display
-document.getElementById('current-personality').textContent = 
-    document.getElementById('ai-personality').value.charAt(0).toUpperCase() + 
-    document.getElementById('ai-personality').value.slice(1);
-                
-                applySettings();
-                
-                // Reset conversation with new settings
-                resetChat();
-                
-                // Close modal
-                closeSettingsModal();
-            }
+            function resetConversation() {
+    // Clear the conversation history
+    conversationHistory = [
+        {role: "system", content: getSystemPrompt()}
+    ];
+    
+    // Clear the chat messages (keeping only the typing indicator)
+    const typingIndicator = document.getElementById('typing-indicator');
+    chatMessages.innerHTML = '';
+    chatMessages.appendChild(typingIndicator);
+    
+    // Add the welcome message back
+    const welcomeMessage = `
+        <div class="message ai-message" style="animation-delay: 0.2s;">
+            <div class="message-content">
+                🎮 Welcome to Gooner AI! I can help with:
+                <br><br>
+                • Game guides & walkthroughs<br>
+                • Tips and strategies<br>
+                • Technical support<br>
+                • News and updates<br>
+                • And anything gaming-related!
+                <br><br>
+                <small>Settings updated - using ${userSettings.model} with ${userSettings.personality} personality</small>
+            </div>
+            <div class="message-time">Just now</div>
+            <button class="copy-btn" title="Copy to clipboard">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+    `;
+    
+    chatMessages.insertAdjacentHTML('afterbegin', welcomeMessage);
+    
+    // Reattach event listeners to new elements
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const messageContent = this.parentElement.querySelector('.message-content').textContent;
+            navigator.clipboard.writeText(messageContent)
+                .then(() => {
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                });
+        });
+    });
+}
             
-            function applySettings() {
-                // Apply color theme
-                document.documentElement.style.setProperty('--primary', userSettings.primaryColor);
-                document.documentElement.style.setProperty('--secondary', userSettings.secondaryColor);
-                
-                // Convert colors to RGB for the background gradient
-                const primaryRgb = hexToRgb(userSettings.primaryColor);
-                const secondaryRgb = hexToRgb(userSettings.secondaryColor);
-                
-                document.documentElement.style.setProperty('--primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
-                document.documentElement.style.setProperty('--secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
-                
-                // Update current model display
-                currentModel.textContent = userSettings.model;
-
-                document.getElementById('current-personality').textContent = 
-    userSettings.personality.charAt(0).toUpperCase() + 
-    userSettings.personality.slice(1);
-            }
+          function applySettings() {
+    // Apply color theme
+    document.documentElement.style.setProperty('--primary', userSettings.primaryColor);
+    document.documentElement.style.setProperty('--secondary', userSettings.secondaryColor);
+    
+    // Convert colors to RGB for the background gradient
+    const primaryRgb = hexToRgb(userSettings.primaryColor);
+    const secondaryRgb = hexToRgb(userSettings.secondaryColor);
+    
+    document.documentElement.style.setProperty('--primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+    document.documentElement.style.setProperty('--secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+    
+    // Update current model and personality displays
+    document.getElementById('current-model').textContent = userSettings.model;
+    document.getElementById('current-personality').textContent = 
+        userSettings.personality.charAt(0).toUpperCase() + 
+        userSettings.personality.slice(1);
+    
+    // Update the system prompt in conversation history if it exists
+    if (conversationHistory[0]?.role === "system") {
+        conversationHistory[0].content = getSystemPrompt();
+    }
+}
             
             function hexToRgb(hex) {
                 // Remove # if present
