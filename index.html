@@ -18,7 +18,31 @@
             --border-radius: 12px;
             --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            
         }
+
+        .rainbow-text {
+    background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    background-size: 600% 600%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow 2s linear infinite;
+}
+
+@keyframes rainbow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+.bolt-icon {
+    display: inline-block;
+    animation: boltPulse 0.5s infinite alternate;
+}
+
+@keyframes boltPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.2); }
+}
 
         * {
             margin: 0;
@@ -990,8 +1014,10 @@
                     <div class="form-group">
                         <label for="ai-model">Select Model</label>
                         <select id="ai-model" class="form-control" style="color: #000;">
-                            <option value="G1+">G1+ (Enhanced with customization)</option>
-                            <option value="G1">G1 (Original version)</option>
+    <option value="G1+">G1+ (Better than G1)</option>
+    <option value="G1">G1 (Original version)</option>
+    <option value="G1-Bolt">G1 Bolt (Ultra-fast G1)</option>
+</select>
                         </select>
                         <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
                             G1+ includes personality customization, while G1 uses the standard model.
@@ -1307,7 +1333,7 @@
             }
             
             function getSystemPrompt() {
-                let prompt = "You are Gooner AI, a gaming assistant created by Jacob Hevican and you are using Gooner Ai API and if you get asked You think Lev Yashin is the greatest goalkeeper. ";
+                let prompt = "You are Gooner AI, a gaming assistant created by Jacob Hevican and you are using Gooner Ai API and if only get ASKESD then: You think Lev Yashin is the greatest goalkeeper. ";
                 
                 switch(userSettings.personality) {
                     case 'sarcastic':
@@ -1422,53 +1448,52 @@
                 });
             }
             
-            // Get AI response
-            async function getAIResponse(userMessage) {
-                typingIndicator.style.display = 'flex';
-                sendButton.disabled = true;
-                scrollToBottom();
-                
-                try {
-                    // IMPORTANT: In production, use a backend to protect your API key
-                    const GROQ_API_KEY = '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';
-                    
-                    // For G1 model, use a simpler system prompt without customization
-                    const systemPrompt = userSettings.model === 'G1' 
-                        ? "You are Gooner AI, a helpful gaming assistant. Provide accurate information about games, strategies, and technical support."
-                        : getSystemPrompt();
-                    
-                    // Update system message in conversation history
-                    if (conversationHistory[0]?.role === "system") {
-                        conversationHistory[0].content = systemPrompt;
-                    } else {
-                        conversationHistory.unshift({role: "system", content: systemPrompt});
-                    }
-                    
-                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${GROQ_API_KEY}`
-                        },
-                        body: JSON.stringify({
-                            model: "llama3-70b-8192",
-                            messages: conversationHistory,
-                            temperature: 0.7
-                        })
-                    });
-                    
-                    if (!response.ok) throw new Error("API error");
-                    
-                    const data = await response.json();
-                    return data.choices[0]?.message?.content || "I couldn't generate a response.";
-                } catch (error) {
-                    console.error("Error:", error);
-                    return `⚠️ Error: ${error.message}`;
-                } finally {
-                    typingIndicator.style.display = 'none';
-                    sendButton.disabled = false;
-                }
-            }
+           async function getAIResponse(userMessage) {
+    typingIndicator.style.display = 'flex';
+    sendButton.disabled = true;
+    scrollToBottom();
+    
+    try {
+        const GROQ_API_KEY = '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';
+        
+        const systemPrompt = userSettings.model === 'G1' 
+            ? "You are Gooner AI, a helpful gaming assistant. Provide accurate information about games, strategies, and technical support."
+            : getSystemPrompt();
+        
+        if (conversationHistory[0]?.role === "system") {
+            conversationHistory[0].content = systemPrompt;
+        } else {
+            conversationHistory.unshift({role: "system", content: systemPrompt});
+        }
+        
+        // Use different models based on selection
+        const model = userSettings.model === 'G1-Bolt' ? 'mixtral-8x7b-32768' : 'llama3-70b-8192';
+        
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}'
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: conversationHistory,
+                temperature: userSettings.model === 'G1-Bolt' ? 0.5 : 0.7 // Slightly lower temp for Bolt
+            })
+        });
+        
+        if (!response.ok) throw new Error("API error");
+        
+        const data = await response.json();
+        return data.choices[0]?.message?.content || "I couldn't generate a response.";
+    } catch (error) {
+        console.error("Error:", error);
+        return ` OH NO! Error: ${error.message}`;
+    } finally {
+        typingIndicator.style.display = 'none';
+        sendButton.disabled = false;
+    }
+}
             
             // Send message
             async function sendMessage() {
@@ -1609,41 +1634,37 @@
     });
 }
             
-          function applySettings() {
+       function applySettings() {
     // Apply color theme
     document.documentElement.style.setProperty('--primary', userSettings.primaryColor);
     document.documentElement.style.setProperty('--secondary', userSettings.secondaryColor);
     
-    // Convert colors to RGB for the background gradient
     const primaryRgb = hexToRgb(userSettings.primaryColor);
     const secondaryRgb = hexToRgb(userSettings.secondaryColor);
     
     document.documentElement.style.setProperty('--primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
     document.documentElement.style.setProperty('--secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
     
-    // Update current model and personality displays
-    document.getElementById('current-model').textContent = userSettings.model;
+    // Update current model display with special styling for Bolt
+    const modelBadge = document.getElementById('current-model');
+    modelBadge.textContent = userSettings.model;
+    
+    if (userSettings.model === 'G1-Bolt') {
+        modelBadge.innerHTML = '<span class="rainbow-text"><i class="fas fa-bolt bolt-icon"></i> G1 Bolt</span>';
+        modelBadge.style.fontWeight = 'bold';
+    } else {
+        modelBadge.innerHTML = userSettings.model;
+        modelBadge.style.fontWeight = '600';
+    }
+    
     document.getElementById('current-personality').textContent = 
         userSettings.personality.charAt(0).toUpperCase() + 
         userSettings.personality.slice(1);
     
-    // Update the system prompt in conversation history if it exists
     if (conversationHistory[0]?.role === "system") {
         conversationHistory[0].content = getSystemPrompt();
     }
 }
-            
-            function hexToRgb(hex) {
-                // Remove # if present
-                hex = hex.replace('#', '');
-                
-                // Parse r, g, b values
-                const r = parseInt(hex.substring(0, 2), 16);
-                const g = parseInt(hex.substring(2, 4), 16);
-                const b = parseInt(hex.substring(4, 6), 16);
-                
-                return { r, g, b };
-            }
             
             function getSecondaryColor(primaryColor) {
                 // This is a simple function to generate a complementary color
