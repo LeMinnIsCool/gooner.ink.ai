@@ -741,6 +741,73 @@
             display: inline-block;
         }
 
+        /* Voice selection styles */
+        .voice-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .voice-option {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .voice-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .voice-option.selected {
+            background: rgba(var(--primary-rgb), 0.2);
+            border-left: 3px solid var(--primary);
+        }
+
+        .voice-option input {
+            margin-right: 0.5rem;
+        }
+
+        .voice-label {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .voice-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .voice-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Test voice button */
+        .test-voice-btn {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(var(--primary-rgb), 0.1);
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .test-voice-btn:hover {
+            background: rgba(var(--primary-rgb), 0.2);
+        }
+
         @keyframes rainbow {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -971,6 +1038,7 @@
                             <option value="zesty">Zesty</option>
                             <option value="crapper">Crapper</option>
                             <option value="roachy">Roachy</option>
+                            <option value="farttalk">Farttalk</option>
                             <option value="custom">Custom</option>
                         </select>
                     </div>
@@ -981,6 +1049,48 @@
                         <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
                             Example: "You are a helpful but sarcastic gaming assistant who loves puns."
                         </small>
+                    </div>
+                </div>
+                
+                <!-- Voice Selection (only shown for Farttalk personality) -->
+                <div class="settings-section" id="voice-section" style="display: none;">
+                    <h3><i class="fas fa-volume-up"></i> Voice Selection</h3>
+                    <div class="voice-selector">
+                        <div class="voice-option selected" data-voice="fart1">
+                            <input type="radio" name="voice" id="voice-fart1" checked>
+                            <label class="voice-label" for="voice-fart1">
+                                <span class="voice-name">Classic Fart</span>
+                                <span class="voice-desc">Standard fart sounds with occasional toots</span>
+                            </label>
+                        </div>
+                        
+                        <div class="voice-option" data-voice="fart2">
+                            <input type="radio" name="voice" id="voice-fart2">
+                            <label class="voice-label" for="voice-fart2">
+                                <span class="voice-name">Wet Willy</span>
+                                <span class="voice-desc">Juicy, bubbly farts with extra reverb</span>
+                            </label>
+                        </div>
+                        
+                        <div class="voice-option" data-voice="fart3">
+                            <input type="radio" name="voice" id="voice-fart3">
+                            <label class="voice-label" for="voice-fart3">
+                                <span class="voice-name">Squeaker</span>
+                                <span class="voice-desc">High-pitched squeaky fart sounds</span>
+                            </label>
+                        </div>
+                        
+                        <div class="voice-option" data-voice="fart4">
+                            <input type="radio" name="voice" id="voice-fart4">
+                            <label class="voice-label" for="voice-fart4">
+                                <span class="voice-name">Bass Blaster</span>
+                                <span class="voice-desc">Deep, rumbling farts that shake the room</span>
+                            </label>
+                        </div>
+                        
+                        <button class="test-voice-btn" id="test-voice-btn">
+                            <i class="fas fa-play"></i> Test Voice
+                        </button>
                     </div>
                 </div>
                 
@@ -1012,6 +1122,7 @@
                             <option value="G1+">G1+ (Enhanced with customization)</option>
                             <option value="G1">G1 (Original version)</option>
                             <option value="G1 Bolt">G1 Bolt (Ultra-fast version)</option>
+                            <option value="Farttalk">Farttalk (Speaks in farts)</option>
                         </select>
                         <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
                             G1+ includes personality customization, while G1 uses the standard model.
@@ -1066,10 +1177,15 @@
             const loginBtn = document.getElementById('login-btn');
             const signupBtn = document.getElementById('signup-btn');
             const currentModel = document.getElementById('current-model');
+            const voiceSection = document.getElementById('voice-section');
+            const testVoiceBtn = document.getElementById('test-voice-btn');
             
             // User data and settings
             let currentUser = null;
             let conversationHistory = [];
+            let selectedVoice = 'fart1';
+            let audioContext;
+            let audioBuffers = {};
             
             // Default settings
             let userSettings = {
@@ -1078,7 +1194,8 @@
                 primaryColor: '#6E48AA',
                 secondaryColor: '#4776E6',
                 model: 'G1+',
-                customData: ''
+                customData: '',
+                voice: 'fart1'
             };
             
             // Convert primary color to RGB for CSS variables
@@ -1111,6 +1228,9 @@
                 
                 // Initialize event listeners
                 setupEventListeners();
+                
+                // Initialize audio context for Farttalk
+                initAudio();
             }
             
             function setupEventListeners() {
@@ -1163,6 +1283,9 @@
                 document.getElementById('ai-personality').addEventListener('change', function() {
                     document.getElementById('custom-personality-group').style.display = 
                         this.value === 'custom' ? 'block' : 'none';
+                    
+                    // Show voice selection only for Farttalk
+                    voiceSection.style.display = this.value === 'farttalk' ? 'block' : 'none';
                 });
                 
                 // Color pickers
@@ -1187,6 +1310,103 @@
                         opt.classList.remove('selected');
                     });
                     document.getElementById('theme-color').value = this.value;
+                });
+                
+                // Voice selection
+                document.querySelectorAll('.voice-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        document.querySelectorAll('.voice-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        selectedVoice = this.dataset.voice;
+                    });
+                });
+                
+                // Test voice button
+                testVoiceBtn.addEventListener('click', testSelectedVoice);
+            }
+            
+            function initAudio() {
+                try {
+                    // Create audio context
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Preload some fart sounds (simulated since we can't load actual files here)
+                    // In a real app, you would load actual audio files
+                    const fartTypes = ['fart1', 'fart2', 'fart3', 'fart4'];
+                    
+                    fartTypes.forEach(type => {
+                        // Create a buffer with simulated fart sound
+                        const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.5, audioContext.sampleRate);
+                        const channelData = buffer.getChannelData(0);
+                        
+                        // Generate different types of fart sounds
+                        for (let i = 0; i < buffer.length; i++) {
+                            switch(type) {
+                                case 'fart1': // Classic fart
+                                    channelData[i] = Math.random() * 0.2 * Math.sin(i / 20) * Math.sin(i / 100);
+                                    if (i % 1000 === 0 && Math.random() > 0.9) {
+                                        channelData[i] = Math.random() * 0.5;
+                                    }
+                                    break;
+                                case 'fart2': // Wet Willy
+                                    channelData[i] = Math.random() * 0.3 * Math.sin(i / 10) * (Math.random() > 0.9 ? 1 : 0.3);
+                                    break;
+                                case 'fart3': // Squeaker
+                                    channelData[i] = Math.random() * 0.15 * Math.sin(i / 5);
+                                    break;
+                                case 'fart4': // Bass Blaster
+                                    channelData[i] = Math.random() * 0.4 * Math.sin(i / 50) * Math.sin(i / 200);
+                                    break;
+                            }
+                        }
+                        
+                        audioBuffers[type] = buffer;
+                    });
+                } catch (e) {
+                    console.error("Audio initialization failed:", e);
+                }
+            }
+            
+            function playFartSound(type) {
+                if (!audioContext || !audioBuffers[type]) return;
+                
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffers[type];
+                source.connect(audioContext.destination);
+                source.start();
+            }
+            
+            function testSelectedVoice() {
+                playFartSound(selectedVoice);
+            }
+            
+            function speakInFarts(text) {
+                if (!audioContext) return;
+                
+                // Split text into words
+                const words = text.split(/\s+/);
+                let delay = 0;
+                
+                words.forEach((word, index) => {
+                    // Play a fart for each word after a short delay
+                    setTimeout(() => {
+                        // Vary the fart type slightly based on word length and position
+                        let fartType = selectedVoice;
+                        if (word.length > 5) {
+                            // Longer words get a longer fart
+                            playFartSound(fartType);
+                            setTimeout(() => {
+                                playFartSound(fartType === 'fart3' ? 'fart1' : 'fart3');
+                            }, 100);
+                        } else {
+                            playFartSound(fartType);
+                        }
+                    }, delay);
+                    
+                    // Increase delay for next word
+                    delay += 200 + Math.random() * 300;
                 });
             }
             
@@ -1367,6 +1587,16 @@
               "You often act dramatic or sad for attention, like everything is the end of the world. You're a total sadsy.\n" +
               "Your tone is bratty, whiny, and a bit chaotic.";
     break;
+    
+                    case 'farttalk':
+                        prompt += "You communicate exclusively through fart sounds. However, you still understand normal language and provide helpful responses. Your messages should be a series of onomatopoeic fart sounds that somehow convey meaning. Be creative with your fart vocabulary! Examples:\n\n" +
+                                 "• 'Pffft prrrrt blaaat' (Hello)\n" +
+                                 "• 'Brap brap poot' (Yes)\n" +
+                                 "• 'Pfffffffft splort' (No)\n" +
+                                 "• 'Toot toot parp blam' (I love gaming)\n" +
+                                 "• 'Braaaap poot squeak' (That's interesting)\n\n" +
+                                 "The user will hear actual fart sounds when you respond, so make sure your text representation matches the sounds they'll hear.";
+                        break;
              
                     case 'custom':
                         prompt += userSettings.customPersonality || "You are a helpful gaming assistant.";
@@ -1428,6 +1658,11 @@
                                 }, 2000);
                             });
                     });
+                    
+                    // Play fart sounds for Farttalk personality
+                    if (userSettings.personality === 'farttalk') {
+                        speakInFarts(content);
+                    }
                 }
                 
                 // Highlight any code blocks
@@ -1465,9 +1700,11 @@
         }
         
         // Use different models based on selection
-const model = userSettings.model === 'G1 Bolt' 
-    ? "llama-3.1-8b-instant"  // New fast model
-    : "llama3-70b-8192";     // Default (powerful but slower)
+        const model = userSettings.model === 'G1 Bolt' 
+            ? "llama-3.1-8b-instant"  // New fast model
+            : userSettings.model === 'Farttalk'
+            ? "llama3-70b-8192"       // Farttalk uses the same as default for now
+            : "llama3-70b-8192";     // Default (powerful but slower)
         
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -1543,6 +1780,21 @@ const model = userSettings.model === 'G1 Bolt'
                 document.getElementById('custom-personality-group').style.display = 
                     userSettings.personality === 'custom' ? 'block' : 'none';
                 
+                // Show/hide voice section based on personality
+                voiceSection.style.display = userSettings.personality === 'farttalk' ? 'block' : 'none';
+                
+                // Select the current voice
+                document.querySelectorAll('.voice-option').forEach(option => {
+                    if (option.dataset.voice === userSettings.voice) {
+                        option.classList.add('selected');
+                        option.querySelector('input').checked = true;
+                        selectedVoice = userSettings.voice;
+                    } else {
+                        option.classList.remove('selected');
+                        option.querySelector('input').checked = false;
+                    }
+                });
+                
                 // Select the color option if it matches a preset
                 let colorMatched = false;
                 document.querySelectorAll('.color-option:not(.custom-color)').forEach(option => {
@@ -1566,7 +1818,8 @@ const model = userSettings.model === 'G1 Bolt'
         primaryColor: document.getElementById('theme-color').value,
         secondaryColor: getSecondaryColor(document.getElementById('theme-color').value),
         model: document.getElementById('ai-model').value,
-        customData: document.getElementById('custom-data').value
+        customData: document.getElementById('custom-data').value,
+        voice: selectedVoice
     };
     
     // Save to localStorage
@@ -1660,6 +1913,8 @@ const model = userSettings.model === 'G1 Bolt'
     const currentModelElement = document.getElementById('current-model');
     if (userSettings.model === 'G1 Bolt') {
         currentModelElement.innerHTML = 'G1 <span class="rainbow-text">Bolt</span>';
+    } else if (userSettings.model === 'Farttalk') {
+        currentModelElement.innerHTML = '<span style="color:#8BC34A">Farttalk</span>';
     } else {
         currentModelElement.textContent = userSettings.model;
     }
