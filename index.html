@@ -741,10 +741,21 @@
             display: inline-block;
         }
 
-        @keyframes rainbow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Voice call styles */
+        .call-active {
+            background-color: #ff3b30 !important;
+            color: white !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+
+        #voice-response-audio {
+            display: none;
         }
 
         /* Animations */
@@ -762,6 +773,12 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* Responsive adjustments */
@@ -903,6 +920,9 @@
         <span class="personality-badge" id="current-personality">Sarcastic</span>
     </div>
     <div class="chat-actions">
+        <button class="action-btn" id="call-btn" title="Voice Call">
+            <i class="fas fa-phone"></i>
+        </button>
         <button class="action-btn" id="settings-btn" title="Settings">
             <i class="fas fa-cog"></i>
         </button>
@@ -1066,10 +1086,15 @@
             const loginBtn = document.getElementById('login-btn');
             const signupBtn = document.getElementById('signup-btn');
             const currentModel = document.getElementById('current-model');
+            const callBtn = document.getElementById('call-btn');
+            const voiceResponseAudio = document.getElementById('voice-response-audio');
             
             // User data and settings
             let currentUser = null;
             let conversationHistory = [];
+            let isCallActive = false;
+            let recognition = null;
+            let speechSynthesis = window.speechSynthesis;
             
             // Default settings
             let userSettings = {
@@ -1096,18 +1121,18 @@
             function initApp() {
                 // Check if user is logged in (from localStorage)
                 const savedUser = localStorage.getItem('goonerAIUser');
-               if (savedUser) {
-    try {
-        currentUser = JSON.parse(savedUser);
-        userSettings = JSON.parse(localStorage.getItem('goonerAISettings')) || userSettings;
-        showChat();
-        applySettings(); // This will initialize both model and personality indicators
-    } catch (e) {
-        console.error('Error loading user data:', e);
-        localStorage.removeItem('goonerAIUser');
-        localStorage.removeItem('goonerAISettings');
-    }
-}
+                if (savedUser) {
+                    try {
+                        currentUser = JSON.parse(savedUser);
+                        userSettings = JSON.parse(localStorage.getItem('goonerAISettings')) || userSettings;
+                        showChat();
+                        applySettings(); // This will initialize both model and personality indicators
+                    } catch (e) {
+                        console.error('Error loading user data:', e);
+                        localStorage.removeItem('goonerAIUser');
+                        localStorage.removeItem('goonerAISettings');
+                    }
+                }
                 
                 // Initialize event listeners
                 setupEventListeners();
@@ -1188,6 +1213,133 @@
                     });
                     document.getElementById('theme-color').value = this.value;
                 });
+                
+                // Voice call button
+                callBtn.addEventListener('click', toggleVoiceCall);
+                
+                // Load voices when they become available
+                if (speechSynthesis.getVoices().length > 0) {
+                    // Voices already loaded
+                } else {
+                    speechSynthesis.addEventListener('voiceschanged', function() {
+                        // Voices loaded
+                    });
+                }
+            }
+            
+            // Initialize Web Speech API
+            function initSpeechRecognition() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert("Your browser doesn't support speech recognition. Try Chrome or Edge.");
+                    return null;
+                }
+                
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                return recognition;
+            }
+
+            // Initialize speech synthesis
+            function speak(text) {
+                if (!speechSynthesis) {
+                    console.warn("Speech synthesis not supported");
+                    return;
+                }
+                
+                // Cancel any ongoing speech
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // Try to find a good voice
+                const voices = speechSynthesis.getVoices();
+                const preferredVoices = [
+                    'Microsoft David - English (United States)',
+                    'Google US English',
+                    'Alex',
+                    'Samantha'
+                ];
+                
+                for (const voiceName of preferredVoices) {
+                    const voice = voices.find(v => v.name === voiceName);
+                    if (voice) {
+                        utterance.voice = voice;
+                        break;
+                    }
+                }
+                
+                speechSynthesis.speak(utterance);
+            }
+
+            // Toggle voice call
+            async function toggleVoiceCall() {
+                if (!isCallActive) {
+                    // Start call
+                    recognition = initSpeechRecognition();
+                    if (!recognition) return;
+                    
+                    isCallActive = true;
+                    callBtn.classList.add('call-active');
+                    callBtn.innerHTML = '<i class="fas fa-phone-slash"></i>';
+                    
+                    recognition.onresult = async (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        addMessage(transcript, true);
+                        
+                        // Get AI response
+                        const response = await getAIResponse(transcript);
+                        addMessage(response, false);
+                        
+                        // Speak the response
+                        speak(response);
+                        
+                        // Continue listening if call is still active
+                        if (isCallActive) {
+                            recognition.start();
+                        }
+                    };
+                    
+                    recognition.onerror = (event) => {
+                        console.error('Speech recognition error', event.error);
+                        if (event.error === 'no-speech') {
+                            recognition.start(); // Restart if no speech detected
+                        } else {
+                            endCall();
+                        }
+                    };
+                    
+                    recognition.onend = () => {
+                        if (isCallActive) {
+                            recognition.start();
+                        }
+                    };
+                    
+                    recognition.start();
+                } else {
+                    // End call
+                    endCall();
+                }
+            }
+
+            function endCall() {
+                isCallActive = false;
+                callBtn.classList.remove('call-active');
+                callBtn.innerHTML = '<i class="fas fa-phone"></i>';
+                
+                if (recognition) {
+                    recognition.stop();
+                }
+                
+                if (speechSynthesis) {
+                    speechSynthesis.cancel();
+                }
             }
             
             function handleLogin() {
