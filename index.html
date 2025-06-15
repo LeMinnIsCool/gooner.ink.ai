@@ -403,13 +403,11 @@
         .input-wrapper {
             position: relative;
             width: 100%;
-            display: flex;
-            gap: 0.5rem;
         }
 
         .input-box {
             width: 100%;
-            padding: 0.8rem 1rem;
+            padding: 0.8rem 3rem 0.8rem 1rem;
             background-color: var(--bg-darker);
             border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: var(--border-radius);
@@ -424,18 +422,20 @@
         }
 
         .send-button {
+            position: absolute;
+            right: 0.75rem;
+            bottom: 0.75rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: var(--border-radius);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: var(--transition);
-            flex-shrink: 0;
         }
 
         .send-button:hover {
@@ -447,36 +447,6 @@
             opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
-        }
-
-        .voice-button {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: var(--border-radius);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            flex-shrink: 0;
-        }
-
-        .voice-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .voice-button.listening {
-            background: #ff3b30;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
 
         .typing-indicator {
@@ -808,9 +778,11 @@
                 padding-right: 2.8rem;
             }
             
-            .send-button, .voice-button {
-                width: 40px;
-                height: 40px;
+            .send-button {
+                width: 34px;
+                height: 34px;
+                right: 0.6rem;
+                bottom: 0.6rem;
             }
         }
 
@@ -859,11 +831,6 @@
             
             .modal-content {
                 width: 98%;
-            }
-            
-            .send-button, .voice-button {
-                width: 36px;
-                height: 36px;
             }
         }
     </style>
@@ -960,9 +927,6 @@
                     <button class="copy-btn" title="Copy to clipboard">
                         <i class="fas fa-copy"></i>
                     </button>
-                    <button class="speak-btn" title="Read aloud">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
                 </div>
                 
                 <div class="typing-indicator" id="typing-indicator" style="display: none;">
@@ -976,9 +940,6 @@
             <div class="input-container">
                 <div class="input-wrapper">
                     <textarea class="input-box" id="user-input" placeholder="Ask me anything about gaming..." rows="1"></textarea>
-                    <button class="voice-button" id="voice-button" title="Voice Input">
-                        <i class="fas fa-microphone"></i>
-                    </button>
                     <button class="send-button" id="send-button">
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -1093,7 +1054,6 @@
             const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
-            const voiceButton = document.getElementById('voice-button');
             const typingIndicator = document.getElementById('typing-indicator');
             const settingsModal = document.getElementById('settings-modal');
             const settingsBtn = document.getElementById('settings-btn');
@@ -1110,9 +1070,6 @@
             // User data and settings
             let currentUser = null;
             let conversationHistory = [];
-            let recognition = null;
-            let speechSynthesis = window.speechSynthesis;
-            let voices = [];
             
             // Default settings
             let userSettings = {
@@ -1121,8 +1078,7 @@
                 primaryColor: '#6E48AA',
                 secondaryColor: '#4776E6',
                 model: 'G1+',
-                customData: '',
-                voiceEnabled: true
+                customData: ''
             };
             
             // Convert primary color to RGB for CSS variables
@@ -1155,12 +1111,6 @@
                 
                 // Initialize event listeners
                 setupEventListeners();
-                
-                // Initialize voice recognition if available
-                initVoiceRecognition();
-                
-                // Load voices for text-to-speech
-                loadVoices();
             }
             
             function setupEventListeners() {
@@ -1238,115 +1188,6 @@
                     });
                     document.getElementById('theme-color').value = this.value;
                 });
-            }
-            
-            function initVoiceRecognition() {
-                try {
-                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    if (SpeechRecognition) {
-                        recognition = new SpeechRecognition();
-                        recognition.continuous = false;
-                        recognition.interimResults = false;
-                        recognition.lang = 'en-US';
-                        
-                        recognition.onstart = function() {
-                            voiceButton.classList.add('listening');
-                            voiceButton.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-                            userInput.placeholder = "Listening...";
-                        };
-                        
-                        recognition.onresult = function(event) {
-                            const transcript = event.results[0][0].transcript;
-                            userInput.value = transcript;
-                            userInput.style.height = 'auto';
-                            userInput.style.height = (userInput.scrollHeight) + 'px';
-                        };
-                        
-                        recognition.onerror = function(event) {
-                            console.error('Speech recognition error', event.error);
-                            voiceButton.classList.remove('listening');
-                            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
-                            userInput.placeholder = "Ask me anything about gaming...";
-                        };
-                        
-                        recognition.onend = function() {
-                            voiceButton.classList.remove('listening');
-                            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
-                            userInput.placeholder = "Ask me anything about gaming...";
-                        };
-                        
-                        voiceButton.addEventListener('click', toggleVoiceRecognition);
-                    } else {
-                        voiceButton.style.display = 'none';
-                        console.warn('Speech recognition not supported in this browser');
-                    }
-                } catch (e) {
-                    console.error('Error initializing speech recognition:', e);
-                    voiceButton.style.display = 'none';
-                }
-            }
-            
-            function loadVoices() {
-                // Get the available voices
-                voices = speechSynthesis.getVoices();
-                
-                // Some browsers load voices asynchronously
-                if (voices.length === 0) {
-                    speechSynthesis.onvoiceschanged = function() {
-                        voices = speechSynthesis.getVoices();
-                    };
-                }
-            }
-            
-            function speakText(text) {
-                if (!userSettings.voiceEnabled || !speechSynthesis) return;
-                
-                // Cancel any current speech
-                speechSynthesis.cancel();
-                
-                // Create a new speech utterance
-                const utterance = new SpeechSynthesisUtterance(text);
-                
-                // Set voice properties
-                utterance.rate = 1;
-                utterance.pitch = 1;
-                utterance.volume = 1;
-                
-                // Try to find a good voice
-                const preferredVoices = ['Google UK English Male', 'Microsoft David - English (United States)'];
-                const defaultVoice = voices.find(voice => voice.default);
-                
-                for (const voiceName of preferredVoices) {
-                    const voice = voices.find(v => v.name === voiceName);
-                    if (voice) {
-                        utterance.voice = voice;
-                        break;
-                    }
-                }
-                
-                if (!utterance.voice && defaultVoice) {
-                    utterance.voice = defaultVoice;
-                }
-                
-                // Speak the text
-                speechSynthesis.speak(utterance);
-            }
-            
-            function toggleVoiceRecognition() {
-                if (!recognition) return;
-                
-                if (voiceButton.classList.contains('listening')) {
-                    recognition.stop();
-                } else {
-                    try {
-                        recognition.start();
-                    } catch (e) {
-                        console.error('Error starting speech recognition:', e);
-                        voiceButton.classList.remove('listening');
-                        voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
-                        userInput.placeholder = "Ask me anything about gaming...";
-                    }
-                }
             }
             
             function handleLogin() {
@@ -1460,9 +1301,6 @@
                         <button class="copy-btn" title="Copy to clipboard">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="speak-btn" title="Read aloud">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
                     </div>
                     
                     <div class="typing-indicator" id="typing-indicator" style="display: none;">
@@ -1484,14 +1322,6 @@
                                     this.innerHTML = '<i class="fas fa-copy"></i>';
                                 }, 2000);
                             });
-                    });
-                });
-                
-                // Add speak button functionality
-                document.querySelectorAll('.speak-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const messageContent = this.parentElement.querySelector('.message-content').textContent;
-                        speakText(messageContent);
                     });
                 });
             }
@@ -1577,14 +1407,7 @@
                 messageDiv.innerHTML = `
                     <div class="message-content">${processedContent}</div>
                     <div class="message-time">${timeString}</div>
-                    ${!isUser ? `
-                    <button class="copy-btn" title="Copy to clipboard">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="speak-btn" title="Read aloud">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
-                    ` : ''}
+                    ${!isUser ? '<button class="copy-btn" title="Copy to clipboard"><i class="fas fa-copy"></i></button>' : ''}
                 `;
                 
                 const delay = document.querySelectorAll('.message').length * 0.1;
@@ -1605,17 +1428,6 @@
                                 }, 2000);
                             });
                     });
-                    
-                    // Add speak functionality
-                    const speakBtn = messageDiv.querySelector('.speak-btn');
-                    speakBtn.addEventListener('click', () => {
-                        speakText(content);
-                    });
-                    
-                    // Auto-speak if enabled
-                    if (userSettings.voiceEnabled) {
-                        speakText(content);
-                    }
                 }
                 
                 // Highlight any code blocks
@@ -1754,8 +1566,7 @@ const model = userSettings.model === 'G1 Bolt'
         primaryColor: document.getElementById('theme-color').value,
         secondaryColor: getSecondaryColor(document.getElementById('theme-color').value),
         model: document.getElementById('ai-model').value,
-        customData: document.getElementById('custom-data').value,
-        voiceEnabled: userSettings.voiceEnabled // Preserve voice setting
+        customData: document.getElementById('custom-data').value
     };
     
     // Save to localStorage
@@ -1813,9 +1624,6 @@ const model = userSettings.model === 'G1 Bolt'
             <button class="copy-btn" title="Copy to clipboard">
                 <i class="fas fa-copy"></i>
             </button>
-            <button class="speak-btn" title="Read aloud">
-                <i class="fas fa-volume-up"></i>
-            </button>
         </div>
     `;
     
@@ -1832,14 +1640,6 @@ const model = userSettings.model === 'G1 Bolt'
                         this.innerHTML = '<i class="fas fa-copy"></i>';
                     }, 2000);
                 });
-        });
-    });
-    
-    // Add speak button functionality
-    document.querySelectorAll('.speak-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const messageContent = this.parentElement.querySelector('.message-content').textContent;
-            speakText(messageContent);
         });
     });
 }
